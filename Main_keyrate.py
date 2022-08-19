@@ -7,27 +7,33 @@ import csv
 import time
 import chaospy
 
-A = [Ai for Ai in ncp.generate_measurements([4, 4, 4], 'A')]
-B = [Bj for Bj in ncp.generate_measurements([4, 4, 4], 'B')]
 
-LEVEL = 2
-M = 2
-Z = ncp.generate_operators('Z', (2 * M - 1) * 2, hermitian=False)
-SDP = ncp.SdpRelaxation(ncp.flatten([A, B, Z]), verbose=0, normalized=True, parallel=1)
-TT, WW = chaospy.quadrature.radau(M, chaospy.Uniform(0, 1), 1)
-T = TT[0][:M * 2 - 1]
-CK = [WW[i] / (TT[0][i] * np.log(2)) for i in range(M * 2 - 1)]
+class BFFnew:
+    def __init__(self, m, level=2):
+        tt, ww = chaospy.quad_gauss_radau(m, chaospy.Uniform(0, 1), 1)
+        self.T = tt[0][:m * 2 - 1]
+        self.CK = [ww[i] / (tt[0][i] * np.log(2)) for i in range(m * 2 - 1)]
 
+        self.A = [Ai for Ai in ncp.generate_measurements([4, 4, 4], 'A')]
+        self.B = [Bj for Bj in ncp.generate_measurements([4, 4, 4], 'B')]
+        self.LEVEL = level
 
-def obj_j(j):
-    expr = 0
-    ff = [A[0][0], 1 - A[0][0]]
-    zz = [Z[:2 * M - 1], Z[2 * M - 1:]]
-    for a in range(2):
-        expr += ff[a] * (zz[a][j] + Dagger(zz[a][j]) + (1 - T[j]) * Dagger(zz[a][j]) * zz[a][j]) \
-                + T[j] * zz[a][j] * Dagger(zz[a][j])
+        self.M = 2 * m
+        self.Z = [[ncp.generate_operators('Z'+str(xx)+str(mm), 4, hermitian=False)
+                   for mm in range(self.M - 1)]
+                  for xx in range(3)]
 
-    return expr
+        self.SDP = ncp.SdpRelaxation(ncp.flatten([self.A, self.B, self.Z]),
+                                     verbose=0, normalized=True, parallel=1)
+
+    def obj_j(self, j, x):
+        expr = 0
+        for ma, mz in zip([self.A[x][0], self.A[x][1], self.A[x][2],
+                           1 - self.A[x][0] - self.A[x][1] - self.A[x][2]],
+                          self.Z[x][j]):
+            expr += ma * (mz + Dagger(mz) + (1 - self.T[j]) * Dagger(mz) * mz) \
+                + self.T[j] * mz * Dagger(mz)
+        return expr
 
 
 def get_subs():
