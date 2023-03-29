@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 """
 Author: Zhen YZ
-Date:
+Date: Mar 29, 2023
+
+Compute the key rate of MPG-based protocol.
 """
 
 from Mod_SDP import *
@@ -20,7 +22,7 @@ for x, y in product(range(3), range(3)):
     with open(FN, 'w') as o:
         csv.writer(o).writerow(['Val', 'Time', f'HAgE_{x}{y}'])
 
-    Val = 1.
+    Val = 1.    # the value of average pay-off
     while True:
         Time = time.time()
         Model.SDP.process_constraints(equalities=[],

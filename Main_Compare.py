@@ -34,7 +34,7 @@ def Fig1_basic():
                    ['0.89 [11%]', '0.92 [8%]', '0.95 [5%]', '0.98 [2%]', '1 [0%]'], fontsize=20)
     axl.tick_params(axis='x', which='major', pad=10)
     axl.set_ylim((0, 1))
-    axl.set_ylabel(r'$S({\bf A}_{xy}|E)$', fontsize=22, color='tab:blue')
+    axl.set_ylabel(r'$H({\bf A}|E)_{\tau_{xy}}$', fontsize=22, color='tab:blue')
     axl.set_yticks([0, 0.5, 1], ['0.0', '0.5', '1.0'], fontsize=20, color='tab:blue')
     axr.set_ylim((0, 1))
     axr.set_ylabel(r'key rate $R$', fontsize=22, color='tab:red')

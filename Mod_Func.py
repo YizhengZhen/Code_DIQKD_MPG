@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
 """
 Author: Zhen YZ
-Date:
-
+Date: Mar 29, 2023
 
 """
-
 import numpy as np
 import qutip as qtp
 from itertools import product
@@ -30,6 +28,8 @@ def cond_entropy(pabs, pbs):
 
 
 def get_probabilities(theta, nv):
+    """ Get the probabilities of MPG
+    """
     psi = np.cos(theta) * qtp.ket('00') + np.sin(theta) * qtp.ket('11')
     rho = qtp.tensor(nv * qtp.ket2dm(psi) + (1 - nv) * qtp.qeye([2, 2]) / 4,
                      nv * qtp.ket2dm(psi) + (1 - nv) * qtp.qeye([2, 2]) / 4)

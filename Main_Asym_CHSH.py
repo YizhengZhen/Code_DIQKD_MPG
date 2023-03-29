@@ -1,9 +1,13 @@
 # -*- coding: utf-8 -*-
 """
 Author: Zhen YZ
-Date:
+Date: Mar 29, 2023
 
-
+This is the class to calculate H(A|E) using Brown-Fawzi-Fawzi quasi-entropy method for the CHSH-based protocol.
+See their paper: https://arxiv.org/abs/2106.13692
+    or their project: https://github.com/peterjbrown519/DI-rates
+Note: The ncpol2sdpa package >= 1.12.3 is required to run this code:
+    https://github.com/peterjbrown519/ncpol2sdpa
 """
 
 import ncpol2sdpa as ncp

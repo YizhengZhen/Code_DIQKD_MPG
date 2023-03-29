@@ -1,3 +1,14 @@
+# -*- coding: utf-8 -*-
+"""
+Author: Zhen YZ
+Date: Mar 29, 2023
+
+This is the class to calculate H(A|E) using Brown-Fawzi-Fawzi quasi-entropy method for the MPG-based protocol.
+See their paper: https://arxiv.org/abs/2106.13692
+    or their project: https://github.com/peterjbrown519/DI-rates
+Note: The ncpol2sdpa package >= 1.12.3 is required to run this code:
+    https://github.com/peterjbrown519/ncpol2sdpa
+"""
 import numpy as np
 import ncpol2sdpa as ncp
 from itertools import product
@@ -7,38 +18,48 @@ import chaospy
 
 class MSG_SDP:
     def __init__(self, m, verbose=False, parallel=False):
+        """
+        :param m: the number of quadrature points
+        :param verbose: True or False
+        :param parallel: True or False
+        """
+        # Generate quadrature points and weights
         tt, ww = chaospy.quad_gauss_radau(m, chaospy.Uniform(0, 1), 1)
         self.M = 2 * m
         self.T = tt[0][:m * 2 - 1]
         self.CK = [ww[i] / (tt[0][i] * np.log(2)) for i in range(m * 2 - 1)]
 
+        # Generate the Alice and Bob's measurements
         self.A = [Ai for Ai in ncp.generate_measurements([4, 4, 4], 'A')]
         self.B = [Bj for Bj in ncp.generate_measurements([4, 4, 4], 'B')]
 
+        # Generate the operators used to compute the quasi-entropy
         self.Z = ncp.generate_operators('Z', 2, hermitian=False)
 
+        # Generate the SDP relaxation
         self.SDP = ncp.SdpRelaxation(ncp.flatten([self.A, self.B, self.Z]),
                                      verbose=verbose, normalized=True, parallel=parallel)
 
+        # Generate the projection operators corresponding to outcome 0 for each entry of magic square
         self.projA = [[ma[0] + ma[1], ma[0] + ma[2], 1 - ma[1] - ma[2]]
                       for ma in self.A]
         self.projB = [[mb[0] + mb[1], mb[0] + mb[2], mb[1] + mb[2]]
                       for mb in self.B]
 
+    # The objective function for the SDP relaxation
     def msg_obj_j(self, j, x, y):
         mas = [self.projA[x][y], 1 - self.projA[x][y]]
         return sum(ma * (mz + Dagger(mz) + (1 - self.T[j]) * Dagger(mz) * mz)
                    + self.T[j] * mz * Dagger(mz)
                    for ma, mz in zip(mas, self.Z[j])
                    )
-
+    """
     def obj_j(self, j, x):
         mas = self.A[x] + [1 - sum(self.A[x][_] for _ in range(3))]
-
         return sum(ma * (mz + Dagger(mz) + (1 - self.T[j]) * Dagger(mz) * mz)
                    + self.T[j] * mz * Dagger(mz)
                    for ma, mz in zip(mas, self.Z)
-                   )
+                   )"""
 
     def get_subs(self):
         subs = {}
@@ -69,6 +90,7 @@ class MSG_SDP:
 
         return op_ineq
 
+    # Constraint on full probabilities
     def constr_prob_full(self, probabilities):
         cons = []
         for x, y in product(range(3), range(3)):
@@ -77,6 +99,7 @@ class MSG_SDP:
 
         return cons
 
+    # Constraint on the probabilities of all entries of magic square
     def constr_prob(self, probabilities):
         cons = []
         for x, y in product(range(3), range(3)):
@@ -86,18 +109,7 @@ class MSG_SDP:
 
         return cons
 
-    """
-    def constr_mean(self, meanvalues):
-        ob_a = [[2 * (ma[0] + ma[1]) - 1, 2 * (ma[0] + ma[2]) - 1, 1 - 2 * (ma[1] + ma[2])]
-                for ma in self.A]
-        ob_b = [[2 * (mb[0] + mb[1]) - 1, 2 * (mb[0] + mb[2]) - 1, 2 * (mb[1] + mb[2]) - 1]
-                for mb in self.B]
-        cons = []
-        for xx, yy in product(range(3), range(3)):
-            cons += [ob_a[xx][yy] * ob_b[yy][xx] - meanvalues[xx][yy]]
-
-        return cons"""
-
+    # Constraint on the winning probability for each entry of magic square
     def constr_threshold(self, threshold):
         cons = []
         for proja, projb in product(self.projA, self.projB):
@@ -105,6 +117,7 @@ class MSG_SDP:
 
         return cons
 
+    # Constraint on the average pay-off for the magic square
     def constr_ineq(self, value):
 
         ob_a = [[2 * projs[0] - 1, 2 * projs[1] - 1, 2 * projs[2] - 1]
@@ -118,6 +131,7 @@ class MSG_SDP:
 
         return [ineq / 9 - value]
 
+    # Initialization of the SDP relaxation
     def init(self):
         self.SDP.get_relaxation(level=2,
                                 equalities=[],
@@ -129,6 +143,7 @@ class MSG_SDP:
                                 extramonomials=self.extra_monomials())
         print(f'SDP is initialized.')
 
+    # Solve the SDP relaxation and return the lower bound on H(A|E)
     def get_hage(self, x, y):
         hage = sum(self.CK)
         for j in range(self.M - 1):
