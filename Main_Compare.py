@@ -76,7 +76,7 @@ def msg_chsh():
                linewidth=2, color='royalblue', linestyle='dashed', alpha=0.9)
     ax[1].plot(data_achsh5[:, 5], data_achsh5[:, 7] * 0.5, label=r'CHSH, $\epsilon=0.5$',
                linewidth=2, color='navy', linestyle='dashed', alpha=0.9)
-    ax[1].plot(data_msg[:, 5], data_msg[:, 7], label='MSG',
+    ax[1].plot(data_msg[:, 5], data_msg[:, 7], label='MPG',
                linewidth=2, color='tab:red', marker='o', alpha=0.9)
 
     hds, lbs = ax[1].get_legend_handles_labels()
@@ -97,7 +97,50 @@ def msg_chsh():
     return fig
 
 
+def msg_ineq_vs_full():
+    data_msg_full = np.genfromtxt('Data/MSG_full.csv', delimiter=',', skip_header=1)
+    data_msg_ineq = np.genfromtxt('Data/MSG.csv', delimiter=',', skip_header=1)
+    data_chsh5 = np.genfromtxt('Data/aCHSH_eps5.csv', delimiter=',', skip_header=1)
+
+    fig, ax = plt.subplots(1, 2, figsize=(10, 5))
+
+    ax[0].plot(data_msg_full[:, -1], data_msg_full[:, 2], label='MPG full-statistic',
+               linewidth=2, color='tab:green', alpha=0.9)
+    ax[0].plot(data_msg_ineq[:, 0], data_msg_ineq[:, 1], label='MPG inequality',
+               linewidth=2, color='tab:red', alpha=0.9)
+
+    ax[1].plot(data_msg_full[:, 0], data_msg_full[:, 1], label='MPG full-statistic',
+               linewidth=2, color='tab:green', alpha=0.9)
+    ax[1].plot(data_msg_ineq[:, 2], data_msg_ineq[:, 4], label='MPG inequality',
+               linewidth=2, color='tab:red', alpha=0.9)
+    ax[1].plot(data_chsh5[:, 2], data_chsh5[:, 4] * 0.5, label=r'CHSH, $\epsilon=0.5$',
+               linewidth=2, color='tab:blue', linestyle='dashed', alpha=0.9)
+
+    ax[0].set_xlabel(r'Winning probability $\omega$', fontsize=20)
+    ax[0].set_ylabel(r'$H(A|E)$', fontsize=20)
+    ax[0].legend(fontsize=16)
+    ax[0].set_xlim([0.88, 1.0003])
+    ax[0].set_ylim([-0.01, 1.0003])
+    ax[0].set_xticks([0.88, 0.90, 0.92, 0.94, 0.96, 0.98, 1.00],
+                     ['0.88', '0.90', '0.92', '0.94', '0.96', '0.98', '1.00'], fontsize=16)
+    ax[0].set_yticks([0, 0.5, 1], ['0.0', '0.5', '1.0'], fontsize=16)
+
+    ax[1].set_xlabel(r'State visibility $\nu$', fontsize=20)
+    ax[1].set_ylabel(r'Key rate $R$', fontsize=20)
+    ax[1].legend(fontsize=16)
+    ax[1].set_xlim([0.94, 1.0003])
+    ax[1].set_ylim([-0.01, 1.0003])
+    ax[1].set_yticks([0, 0.5, 1], ['0', r'$\frac{\gamma}{2}$', r'$\gamma$'], fontsize=16)
+    ax[1].set_xticks([0.94, 0.96, 0.98, 1], ['0.94', '0.96', '0.98', '1.00'], fontsize=16)
+
+    fig.tight_layout()
+    fig.show()
+    return fig
+
+
 if __name__ == '__main__':
 
     # Fig = msg_chsh()
-    Fig = Fig1_basic()
+    # Fig = Fig1_basic()
+    Fig = msg_ineq_vs_full()
+    # Fig.savefig('')

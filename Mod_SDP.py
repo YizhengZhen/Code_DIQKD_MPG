@@ -4,8 +4,8 @@ Author: Zhen YZ
 Date: Mar 29, 2023
 
 This is the class to calculate H(A|E) using Brown-Fawzi-Fawzi quasi-entropy method for the MPG-based protocol.
-See their paper: https://arxiv.org/abs/2106.13692
-    or their project: https://github.com/peterjbrown519/DI-rates
+See the authors' paper: https://arxiv.org/abs/2106.13692
+    or the authors' project: https://github.com/peterjbrown519/DI-rates
 Note: The ncpol2sdpa package >= 1.12.3 is required to run this code:
     https://github.com/peterjbrown519/ncpol2sdpa
 """
@@ -51,7 +51,7 @@ class MSG_SDP:
         mas = [self.projA[x][y], 1 - self.projA[x][y]]
         return sum(ma * (mz + Dagger(mz) + (1 - self.T[j]) * Dagger(mz) * mz)
                    + self.T[j] * mz * Dagger(mz)
-                   for ma, mz in zip(mas, self.Z[j])
+                   for ma, mz in zip(mas, self.Z)
                    )
     """
     def obj_j(self, j, x):
@@ -91,11 +91,15 @@ class MSG_SDP:
         return op_ineq
 
     # Constraint on full probabilities
-    def constr_prob_full(self, probabilities):
+    def constr_prob_full(self, probab, proba, probb):
         cons = []
         for x, y in product(range(3), range(3)):
             for a, b in product(range(3), range(3)):
-                cons += [self.A[x][a] * self.B[y][b] - probabilities[x][y][a][b]]
+                cons += [self.A[x][a] * self.B[y][b] - probab[x][y][a][b]]
+        for x, a in product(range(3), range(3)):
+            cons += [self.A[x][a] - proba[x][a]]
+        for y, b in product(range(3), range(3)):
+            cons += [self.B[y][b] - probb[y][b]]
 
         return cons
 

@@ -23,27 +23,76 @@ def entropy(pp):
 
 
 def cond_entropy(pabs, pbs):
-
     return entropy(pabs) - entropy(pbs)
 
 
-def get_probabilities(theta, nv):
-    """ Get the probabilities of MPG
-    """
+def get_state(theta, nv):
     psi = np.cos(theta) * qtp.ket('00') + np.sin(theta) * qtp.ket('11')
     rho = qtp.tensor(nv * qtp.ket2dm(psi) + (1 - nv) * qtp.qeye([2, 2]) / 4,
                      nv * qtp.ket2dm(psi) + (1 - nv) * qtp.qeye([2, 2]) / 4)
-    rho = swap(N=4, targets=[1, 2]) * rho * swap(N=4, targets=[1, 2]).dag()
+    return swap(N=4, targets=[1, 2]) * rho * swap(N=4, targets=[1, 2]).dag()
 
+
+def get_proj_meas():
+    """ Get the projective measurement operators """
+    sx, sz = qtp.sigmax(), qtp.sigmaz()
+    ketp, ketm = (qtp.ket('0') + qtp.ket('1'))/np.sqrt(2), (qtp.ket('0') - qtp.ket('1'))/np.sqrt(2)
+    pj_x0 = lambda a: qtp.tensor(sx ** a[1], sx ** a[0]) * qtp.ket('00')
+    pj_x1 = lambda a: qtp.tensor(sz ** a[0], sz ** a[1]) * qtp.tensor(ketp, ketp)
+    pj_x2 = lambda a: qtp.tensor(sz ** a[0], sz ** a[1]) * (qtp.tensor(ketp,qtp.ket('1'))
+                                                            - qtp.tensor(ketm,qtp.ket('0'))) / np.sqrt(2)
+    pj_y0 = lambda b: qtp.tensor(sz ** b[1], sx ** b[0]) * qtp.tensor(ketp, qtp.ket('0'))
+    pj_y1 = lambda b: qtp.tensor(sx ** b[0], sz ** b[1]) * qtp.tensor(qtp.ket('0'), ketp)
+    pj_y2 = lambda b: qtp.tensor(sx ** b[0], sz ** b[1]) * (qtp.ket('00') + qtp.ket('11')) / np.sqrt(2)
+
+    pjAs = [[qtp.ket2dm(pj_x0([0, 0])), qtp.ket2dm(pj_x0([0, 1])), qtp.ket2dm(pj_x0([1, 0]))],
+            [qtp.ket2dm(pj_x1([0, 0])), qtp.ket2dm(pj_x1([0, 1])), qtp.ket2dm(pj_x1([1, 0]))],
+            [qtp.ket2dm(pj_x2([0, 0])), qtp.ket2dm(pj_x2([0, 1])), qtp.ket2dm(pj_x2([1, 0]))]]
+    pjBs = [[qtp.ket2dm(pj_y0([0, 0])), qtp.ket2dm(pj_y0([0, 1])), qtp.ket2dm(pj_y0([1, 0]))],
+            [qtp.ket2dm(pj_y1([0, 0])), qtp.ket2dm(pj_y1([0, 1])), qtp.ket2dm(pj_y1([1, 0]))],
+            [qtp.ket2dm(pj_y2([0, 0])), qtp.ket2dm(pj_y2([0, 1])), qtp.ket2dm(pj_y2([1, 0]))]]
+
+    return pjAs, pjBs
+
+
+def get_full_probs(theta, nv):
+    rho = get_state(theta, nv)
+    pjAs, pjBs = get_proj_meas()
+
+    probab = [[[[(rho * qtp.tensor(pjAs[x][a], pjBs[y][b])).tr().real
+                 for b in range(3)]
+                for a in range(3)]
+               for y in range(3)]
+              for x in range(3)]
+    proba = [[(rho * qtp.tensor(pjAs[x][a], qtp.qeye([2, 2]))).tr().real
+              for a in range(3)]
+             for x in range(3)]
+    probb = [[(rho * qtp.tensor(qtp.qeye([2, 2]), pjBs[y][b])).tr().real
+              for b in range(3)]
+             for y in range(3)]
+
+    return probab, proba, probb
+
+
+def get_meas():
     si, sx, sy, sz = qtp.qeye(2), qtp.sigmax(), qtp.sigmay(), qtp.sigmaz()
     ma = [[qtp.tensor(si, sz), qtp.tensor(sz, si), qtp.tensor(sz, sz)],
           [qtp.tensor(sx, si), qtp.tensor(si, sx), qtp.tensor(sx, sx)],
           [-qtp.tensor(sx, sz), -qtp.tensor(sz, sx), qtp.tensor(sy, sy)]]
     mb = [[ma[0][y], ma[1][y], ma[2][y]] for y in range(3)]
 
+    return ma, mb
+
+
+def get_probabilities(theta, nv):
+    """ Get the probabilities of MPG
+    """
+    rho = get_state(theta, nv)
+    ma, mb = get_meas()
+
     ii = qtp.qeye([2, 2])
     probs = [[[(rho * qtp.tensor((ii + a * ma[x][y]) / 2, (ii + b * mb[y][x]) / 2)).tr().real
-               for a,b in product([+1, -1], [+1, -1])]
+               for a, b in product([+1, -1], [+1, -1])]
               for y in range(3)]
              for x in range(3)]
     means = [[(rho * qtp.tensor(ma[x][y], mb[y][x])).tr().real
@@ -158,9 +207,28 @@ def get_msg_data():
     return data
 
 
+def get_msg_full_data():
+    datas = [np.genfromtxt(f'HAgE_FullStatistics_x{x}y{y}.csv', delimiter=',', skip_header=1)
+             for x, y in product(range(1), range(2))]
+    num = min(data.shape[0] for data in datas)
+    nvs = datas[0][:num, 0]
+    hagbs, hages, means = [], [], []
+    for _ in range(num):
+        probs, mean = get_probabilities(np.pi / 4, nvs[_])
+        means += [np.sum(mean) / 9]
+        hagbs += [np.sum(get_hagbs(probs)) / 9]
+        hages += [np.sum([data[_, 2] for data in datas]) / len(datas)]
+    hages, hagbs = np.array(hages), np.array(hagbs)
+    keyrates = hages - hagbs
+    keyrates[keyrates < 0] = 0
+    new_data = np.vstack((nvs, keyrates, hages, hagbs, means)).T
+
+    return new_data
+
+
 if __name__ == '__main__':
-    Data = get_msg_data()
-    np.savetxt('MSG.csv', Data, delimiter=',')
+    Data = get_msg_full_data()
+    np.savetxt('MSG_full.csv', Data, delimiter=',')
 
 
 
