@@ -1,0 +1,11 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="LatexFigureNotReferenced" enabled="false" level="WEAK WARNING" enabled_by_default="false" />
+    <inspection_tool class="LatexMissingLabel" enabled="false" level="WEAK WARNING" enabled_by_default="false" />
+    <inspection_tool class="LatexTooLargeSection" enabled="false" level="WEAK WARNING" enabled_by_default="false" />
+    <inspection_tool class="PyNonAsciiCharInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="myEncodingFormatIndex" value="1" />
+    </inspection_tool>
+  </profile>
+</component>

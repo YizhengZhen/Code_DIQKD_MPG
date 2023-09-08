@@ -36,11 +36,11 @@ def get_state(theta, nv):
 def get_proj_meas():
     """ Get the projective measurement operators """
     sx, sz = qtp.sigmax(), qtp.sigmaz()
-    ketp, ketm = (qtp.ket('0') + qtp.ket('1'))/np.sqrt(2), (qtp.ket('0') - qtp.ket('1'))/np.sqrt(2)
+    ketp, ketm = (qtp.ket('0') + qtp.ket('1')) / np.sqrt(2), (qtp.ket('0') - qtp.ket('1')) / np.sqrt(2)
     pj_x0 = lambda a: qtp.tensor(sx ** a[1], sx ** a[0]) * qtp.ket('00')
     pj_x1 = lambda a: qtp.tensor(sz ** a[0], sz ** a[1]) * qtp.tensor(ketp, ketp)
-    pj_x2 = lambda a: qtp.tensor(sz ** a[0], sz ** a[1]) * (qtp.tensor(ketp,qtp.ket('1'))
-                                                            - qtp.tensor(ketm,qtp.ket('0'))) / np.sqrt(2)
+    pj_x2 = lambda a: qtp.tensor(sz ** a[0], sz ** a[1]) * (qtp.tensor(ketp, qtp.ket('1'))
+                                                            - qtp.tensor(ketm, qtp.ket('0'))) / np.sqrt(2)
     pj_y0 = lambda b: qtp.tensor(sz ** b[1], sx ** b[0]) * qtp.tensor(ketp, qtp.ket('0'))
     pj_y1 = lambda b: qtp.tensor(sx ** b[0], sz ** b[1]) * qtp.tensor(qtp.ket('0'), ketp)
     pj_y2 = lambda b: qtp.tensor(sx ** b[0], sz ** b[1]) * (qtp.ket('00') + qtp.ket('11')) / np.sqrt(2)
@@ -112,32 +112,41 @@ def get_hagbs(probs):
 
 
 def get_hagb_nu(val):
-
     def _fun(nu):
-        _, means = get_probabilities(np.pi/4, nu[0])
+        _, means = get_probabilities(np.pi / 4, nu[0])
 
         return np.sum(means) / 9 - val
 
     nu_best = fsolve(_fun, x0=np.array([1.]))[0]
-    probs, _ = get_probabilities(np.pi/4, nu_best)
+    probs, _ = get_probabilities(np.pi / 4, nu_best)
 
     return nu_best, np.sum(get_hagbs(probs)) / 9
 
 
 def get_hagb_eta(val):
-
-    _fun = lambda eta: eta[0]**2 * 1 + eta[0]*(1-eta[0]) * 0.5 * 2 + (1-eta[0])**2 * 8/9 - val
+    # Wrong!:
+    # _fun = lambda eta: eta[0]**2 * 1 + eta[0]*(1-eta[0]) * 0.5 * 2 + (1-eta[0])**2 * 8/9 - val
+    _fun = lambda eta: eta[0] ** 2 * 1 + (1 - eta[0]) ** 2 * (7 / 9) - val
     eta_best = fsolve(_fun, x0=np.array([1.]))[0]
-    probs = eta_best**2 * np.array([[[0.5, 0., 0., 0.5] for _ in range(3)] for _ in range(3)]) \
-        + eta_best*(1-eta_best) * np.array([[[0.5, 0., 0.5, 0.] for _ in range(3)],
-                                            [[0.5, 0., 0.5, 0.] for _ in range(3)],
-                                            [[0.5, 0., 0.5, 0.], [0.5, 0., 0.5, 0.],
-                                             [0., 0.5, 0., 0.5]]]) \
-        + (1-eta_best)*eta_best * np.array([[[0.5, 0., 0.5, 0.] for _ in range(3)]
-                                            for _ in range(3)]) \
-        + (1-eta_best)**2 * np.array([[[1., 0., 0., 0.] for _ in range(3)],
-                                      [[1., 0., 0., 0.] for _ in range(3)],
-                                      [[1., 0., 0., 0.], [1., 0., 0., 0.], [0., 1., 0., 0.]]])
+    probs = eta_best ** 2 * np.array([[[0.5, 0., 0., 0.5] for _ in range(3)] for _ in range(3)]) \
+        + eta_best * (1 - eta_best) * np.array([[[0.5, 0., 0.5, 0.] for _ in range(3)],
+                                                [[0.5, 0., 0.5, 0.] for _ in range(3)],
+                                                [[0., 0.5, 0., 0.5] for _ in range(3)]]) \
+        + (1 - eta_best) * eta_best * np.array([[[0.5, 0.5, 0., 0.] for _ in range(3)],
+                                                [[0.5, 0.5, 0., 0.] for _ in range(3)],
+                                                [[0., 0., 0.5, 0.5], [0., 0., 0.5, 0.5], [0.5, 0.5, 0., 0.]]]) \
+        + (1 - eta_best) ** 2 * np.array([[[1., 0., 0., 0.] for _ in range(3)],
+                                          [[1., 0., 0., 0.] for _ in range(3)],
+                                          [[1., 0., 0., 0.], [1., 0., 0., 0.], [0., 1., 0., 0.]]])
+    """probs = eta_best ** 2 * np.array([[[0.5, 0., 0., 0.5] for _ in range(3)] for _ in range(3)]) \
+            + eta_best * (1 - eta_best) * np.array([[[0.5, 0., 0.5, 0.] for _ in range(3)],
+                                                    [[0.5, 0., 0.5, 0.] for _ in range(3)],
+                                                    [[0.5, 0., 0.5, 0.], [0.5, 0., 0.5, 0.], [0., 0.5, 0., 0.5]]]) \
+            + (1 - eta_best) * eta_best * np.array([[[0.5, 0., 0.5, 0.] for _ in range(3)]
+                                                    for _ in range(3)]) \
+            + (1 - eta_best) ** 2 * np.array([[[1., 0., 0., 0.] for _ in range(3)],
+                                              [[1., 0., 0., 0.] for _ in range(3)],
+                                              [[1., 0., 0., 0.], [1., 0., 0., 0.], [0., 1., 0., 0.]]])"""
 
     return eta_best, np.sum(get_hagbs(probs)) / 9
 
@@ -227,9 +236,38 @@ def get_msg_full_data():
 
 
 if __name__ == '__main__':
-    Data = get_msg_full_data()
-    np.savetxt('MSG_full.csv', Data, delimiter=',')
+    # Data = get_msg_full_data()
+    # np.savetxt('MSG_full.csv', Data, delimiter=',')
+    Data = np.genfromtxt('Data/MSG.csv', delimiter=',', skip_header=1)
+    Data_new = Data[:, :5]
+    Data_add = []
+    for _K in range(Data.shape[0]):
+        Eta, Hagb = get_hagb_eta(Data[_K, 0])
+        Data_add += [[Eta, Hagb, max(Data[_K, 1] - Hagb, 0)]]
+    DAta_new = np.hstack((Data_new, np.array(Data_add)))
+    np.savetxt('MSG_corrected.csv', DAta_new, delimiter=',',
+               header='Val,HAgE,nu,HAgB_nu,key_nu,eta,HAgB_eta,key_eta')
 
+    # Test the optimized nu and eta
+    Data_c = np.genfromtxt('MSG_corrected.csv', delimiter=',', skip_header=1)
+    Diff_nv, Diff_eta = 0., 0.
+    for _K in range(Data.shape[0]):
+        _, Mean_nv = get_probabilities(np.pi / 4, Data_c[_K, 2])
+        Diff_nv += abs(Data_c[_K, 0] - np.sum(Mean_nv) / 9)
 
+        Probs = Data_c[_K, 5] ** 2 * np.array([[[0.5, 0., 0., 0.5] for _ in range(3)] for _ in range(3)]) \
+            + Data_c[_K, 5] * (1 - Data_c[_K, 5]) * np.array([[[0.5, 0., 0.5, 0.] for _ in range(3)],
+                                                              [[0.5, 0., 0.5, 0.] for _ in range(3)],
+                                                              [[0., 0.5, 0., 0.5] for _ in range(3)]]) \
+            + (1 - Data_c[_K, 5]) * Data_c[_K, 5] * np.array([[[0.5, 0.5, 0., 0.] for _ in range(3)],
+                                                              [[0.5, 0.5, 0., 0.] for _ in range(3)],
+                                                              [[0., 0., 0.5, 0.5], [0., 0., 0.5, 0.5], [0.5, 0.5, 0., 0.]]]) \
+            + (1 - Data_c[_K, 5]) ** 2 * np.array([[[1., 0., 0., 0.] for _ in range(3)],
+                                                  [[1., 0., 0., 0.] for _ in range(3)],
+                                                  [[1., 0., 0., 0.], [1., 0., 0., 0.], [0., 1., 0., 0.]]])
+        Mean_eta = [[Probs[x][y][0] - Probs[x][y][1] - Probs[x][y][2] + Probs[x][y][3]
+                     for y in range(3)]
+                    for x in range(3)]
+        Diff_eta += abs(Data_c[_K, 0] - np.sum(Mean_eta) / 9)
 
-
+    print(Diff_nv, Diff_eta)
