@@ -21,7 +21,7 @@ def Fig1_basic():
                (1 - datas[kk, 0]) / 4, (1 + datas[kk, 0]) / 4]
         krs += [max(0, hages[kk] - cond_entropy(pab, [pab[0] + pab[2], pab[1] + pab[3]]))]
 
-    fig, axl = plt.subplots(1, 1, figsize=(10,5))
+    fig, axl = plt.subplots(1, 1, figsize=(10, 5))
     axr = axl.twinx()
     for _ in ['left', 'right', 'bottom', 'top']:
         axr.spines[_].set_linewidth(2)
@@ -58,7 +58,7 @@ def msg_chsh():
     data_achsh2 = np.genfromtxt('Data/aCHSH_eps2.csv', delimiter=',', skip_header=1)
     data_achsh3 = np.genfromtxt('Data/aCHSH_eps3.csv', delimiter=',', skip_header=1)
     data_achsh5 = np.genfromtxt('Data/aCHSH_eps5.csv', delimiter=',', skip_header=1)
-    """
+
     fig, ax = plt.subplots(1, 2, figsize=(10, 5), sharey=True)
 
     ax[0].plot(data_achsh1[:, 2], data_achsh1[:, 4] * 0.9, label=r'CHSH, $\epsilon=0.1$',
@@ -93,8 +93,8 @@ def msg_chsh():
     ax[0].set_ylim([-0.02, 1.01])
     ax[0].set_yticks([0, 0.5, 1], ['0', r'$\frac{\gamma}{2}$', r'$\gamma$'], fontsize=20)
     ax[0].set_xticks([0.94, 0.96, 0.98, 1], ['0.94', '0.96', '0.98', '1.00'], fontsize=20)
-    ax[1].set_xticks([0.94, 0.96, 0.98, 1], ['0.94', '0.96', '0.98', '1.00'], fontsize=20)"""
-
+    ax[1].set_xticks([0.94, 0.96, 0.98, 1], ['0.94', '0.96', '0.98', '1.00'], fontsize=20)
+    """
     fig, ax = plt.subplots(1, 1, figsize=(5, 5))
 
     ax.plot(data_achsh1[:, 5], data_achsh1[:, 7] * 0.9, label=r'CHSH, $\epsilon=0.1$',
@@ -115,6 +115,7 @@ def msg_chsh():
     ax.set_xlim([0.94, 1.0003])
     ax.set_ylim([-0.02, 1.01])
     ax.set_xticks([0.94, 0.96, 0.98, 1], ['0.94', '0.96', '0.98', '1.00'], fontsize=20)
+    """
 
     plt.tight_layout()
     plt.show()
@@ -147,7 +148,7 @@ def msg_ineq_vs_full():
     ax[0].set_xlim([0.88, 1.0003])
     ax[0].set_ylim([-0.01, 1.0003])
     ax[0].set_xticks([0.88, 0.90, 0.92, 0.94, 0.96, 0.98, 1.00],
-                     ['0.88', '0.90', '0.92', '0.94', '0.96', '0.98', '1.00'], fontsize=16)
+                     ['0.94', '0.95', '0.96', '0.97', '0.98', '0.99', '1.00'], fontsize=16)
     ax[0].set_yticks([0, 0.5, 1], ['0.0', '0.5', '1.0'], fontsize=16)
 
     ax[1].set_xlabel(r'State visibility $\nu$', fontsize=20)
@@ -157,16 +158,30 @@ def msg_ineq_vs_full():
     ax[1].set_ylim([-0.01, 1.0003])
     ax[1].set_yticks([0, 0.5, 1], ['0', r'$\frac{\gamma}{2}$', r'$\gamma$'], fontsize=16)
     ax[1].set_xticks([0.94, 0.96, 0.98, 1], ['0.94', '0.96', '0.98', '1.00'], fontsize=16)
+    """
+    fig, ax = plt.subplots(1, 1, figsize=(6, 5))
 
+    ax.plot(data_msg_full[:, -1], data_msg_full[:, 2], label='MPG full-statistic',
+            linewidth=2, color='tab:green', alpha=0.9)
+    ax.plot(data_msg_ineq[:, 0], data_msg_ineq[:, 1], label='MPG inequality',
+            linewidth=2, color='tab:red', alpha=0.9)
+    ax.set_xlabel(r'Winning probability $\omega$', fontsize=20)
+    ax.set_ylabel(r'$H(A|E)$', fontsize=20)
+    ax.legend(fontsize=16)
+    ax.set_xlim([0.88, 1.0003])
+    ax.set_ylim([-0.01, 1.0003])
+    ax.set_xticks([0.88, 0.90, 0.92, 0.94, 0.96, 0.98, 1.00],
+                  ['0.94', '0.95', '0.96', '0.97', '0.98', '0.99', '1.00'], fontsize=16)
+    ax.set_yticks([0, 0.5, 1], ['0.0', '0.5', '1.0'], fontsize=16)
+    """
     fig.tight_layout()
     fig.show()
     return fig
 
 
 if __name__ == '__main__':
-
-    Fig = msg_chsh()
+    # Fig = msg_chsh()
     # Fig = Fig1_basic()
-    # Fig = msg_ineq_vs_full()
+    Fig = msg_ineq_vs_full()
     # Fig.savefig('Fig_main_corrected.pdf')
-    Fig.savefig('Fig_main_corrected_penal2.pdf')
+    Fig.savefig('Fig_MPG_full_vs_ineq_corrected_panel1.pdf')
